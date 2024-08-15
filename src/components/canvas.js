@@ -5,8 +5,8 @@ import DraggableCard from './DraggableCard';
 
 const CanvasContainer = styled.div`
   width: 100vw;
-  height: 300vh;
-  overflow: scroll;
+  height: 100vh;
+  overflow: auto;
   position: relative;
   background-color: #f0f0f0;
 `;
@@ -26,6 +26,7 @@ function Canvas() {
   const [cardText, setCardText] = useState(''); // State for input text
   const [draggingConnection, setDraggingConnection] = useState(null); // State for dragging connection
   const canvasRef = useRef(null);
+  const containerRef = useRef(null);
 
   const handleShowMore = (text) => {
     setCurrentCardDetails(text);
@@ -35,8 +36,8 @@ function Canvas() {
   const addCard = () => {
     if (!cardText.trim()) return; // Prevent adding empty cards
 
-    const canvasWidth = window.innerWidth;
-    const canvasHeight = window.innerHeight;
+    const canvasWidth = containerRef.current.clientWidth;
+    const canvasHeight = containerRef.current.clientHeight;
     const cardWidth = 200; // Assuming a default card width
     const cardHeight = 150; // Assuming a default card height
     const centerX = (canvasWidth - cardWidth) / 2;
@@ -74,10 +75,10 @@ function Canvas() {
       const startPos = cardPositions[startId];
       const endPos = cardPositions[endId];
       if (startPos && endPos) {
-        const startX = startPos.x + 200; // Position of the dot on the start card
-        const startY = startPos.y + 75;
-        const endX = endPos.x; // Position of the dot on the end card
-        const endY = endPos.y + 75;
+        const startX = startPos.x + 210; // Adjusted X position for the start card's dot
+        const startY = startPos.y + 75;  // Y position of the dot on the start card
+        const endX = endPos.x - 10;      // Adjusted X position to point to the end card's dot
+        const endY = endPos.y + 75;      // Y position of the dot on the end card
         
         ctx.beginPath();
         ctx.moveTo(startX, startY); // Start of the line
@@ -105,13 +106,25 @@ function Canvas() {
   };
 
   useEffect(() => {
+    const container = containerRef.current;
+
+    // Get the scrollable dimensions of the CanvasContainer after render
+    const scrollHeight = container.scrollHeight;
+    const scrollWidth = container.scrollWidth;
+
+    // Set the canvas size based on the scrollable area
+    const canvas = canvasRef.current;
+    canvas.width = scrollWidth;
+    canvas.height = scrollHeight;
+
     drawConnections();
+
+    console.log('Scroll Height:', scrollHeight);
+    console.log('Scroll Width:', scrollWidth);
   }, [cards, connections, drawConnections]); // Included drawConnections in dependency array
 
   return (
-  
-    <CanvasContainer>
-
+    <CanvasContainer ref={containerRef}>
       {cards.map((card) => (
         <DraggableCard
           key={card.id}
@@ -132,7 +145,7 @@ function Canvas() {
         style={{ position: 'absolute', borderRadius:"10px",top: 10, left: 10, width: '200px', marginRight: '10px' , padding:"10px" }}
       />
       <button onClick={addCard} style={{ position: 'absolute', padding:"10px",backgroundColor:"#3C3D37",color:"white",borderRadius:"10px" ,top: 10, left: 250,outline:"0",border:"0" }}>Add Card</button>
-      <CanvasOverlay ref={canvasRef} width={window.innerWidth} height={window.innerHeight} />
+      <CanvasOverlay ref={canvasRef} />
 
       <Modal
         isOpen={isModalOpen}
